@@ -6,3 +6,4 @@ vendor
 codecov
 coverage.xml
 composer.lock
+phpunit.xml

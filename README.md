@@ -1,6 +1,5 @@
 [![Depfu](https://badges.depfu.com/badges/b9ad43be216e83c78365733dab73b8da/overview.svg)](https://depfu.com/repos/gitlab/Karhal/wallet-connect?project_id=33881)
-[![codecov](https://codecov.io/gh/Karhal/wallet-connect/branch/main/graph/badge.svg?token=QrQsa9HNEV)](https://codecov.io/gh/Karhal/wallet-connect)
-[![PHP Version Require](http://poser.pugx.org/karhal/wallet-connect/require/php)](https://packagist.org/packages/karhal/wallet-connect)
+[![codecov](https://codecov.io/gh/Karhal/web3-connect/branch/main/graph/badge.svg?token=4UL8g1hRfe)](https://codecov.io/gh/Karhal/web3-connect)
 
 # Wallet Connect Bundle
 
