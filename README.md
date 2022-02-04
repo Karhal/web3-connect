@@ -34,7 +34,7 @@ return [
 
 ### Configuration
 
-config/packages/web3-connect.yaml
+config/packages/web3_connect.yaml
 
 ```yaml
 wallet_connect:
