@@ -9,7 +9,7 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder('wallet_connect');
+        $treeBuilder = new TreeBuilder('web3_connect');
         $treeBuilder->getRootNode()
             ->children()
             ->scalarNode('user_class')->defaultValue('App\\Entity\\User')->end()

@@ -1,7 +1,7 @@
-web3_login:
-    path: /web3_login
-    controller: Karhal\Web3ConnectBundle\Controller\Web3ConnectController::login
+web3_verify:
+    path: /web3_verify
+    controller: Karhal\Web3ConnectBundle\Controller\Web3ConnectController::verify
 
-web3_signature:
-    path: /web3_signature
-    controller: Karhal\Web3ConnectBundle\Controller\Web3ConnectController::signature
+web3_nonce:
+    path: /web3_nonce
+    controller: Karhal\Web3ConnectBundle\Controller\Web3ConnectController::nonce

@@ -1,5 +1,5 @@
 {
-    "name": "karhal/web3-connect",
+    "name": "karhal/web3-connect-bundle",
     "description": "Allows login on symfony application via ethereum wallet",
     "type": "symfony-bundle",
     "require": {

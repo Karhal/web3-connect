@@ -38,7 +38,7 @@ class Web3ConnectController
      * @param  Request $request
      * @return JsonResponse
      */
-    public function signature(Request $request): JsonResponse
+    public function nonce(Request $request): JsonResponse
     {
         $request->getSession()->set('nonce', $nonce = Str::random());
 
@@ -50,7 +50,7 @@ class Web3ConnectController
      * @return JsonResponse
      * @throws \Exception
      */
-    public function login(Request $request): JsonResponse
+    public function verify(Request $request): JsonResponse
     {
         $wallet = $this->walletHandler->createWallet($request->get('address'), $request->get('signature'));
 

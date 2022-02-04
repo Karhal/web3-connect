@@ -18,7 +18,7 @@ This bundle is here to bring this feature to every Symfony website.
 ### Installation
 
 ```bash
-composer require karhal/wallet-connect
+composer require karhal/web3-connect-bundle
 ```
 
 ```php
@@ -34,7 +34,7 @@ return [
 
 ### Configuration
 
-config/packages/wallet-connect.yaml
+config/packages/web3-connect.yaml
 
 ```yaml
 wallet_connect:
@@ -111,7 +111,7 @@ Once the message signed, send it back with the address which signed it.
 For each user log in demand, the bundle generates a nonce from your configured signature message to make it unique to the user in session
 
 ```javascript
-const message = await axios.get("/web3_signature").then((res) => res.data);
+const message = await axios.get("/web3_nonce").then((res) => res.data);
 ```
 
 ## Step 2: User signs the Nonce 
@@ -121,7 +121,7 @@ The user now returns the signed message to the login route with his wallet addre
 There are multiple ways to connect your front to the user's wallet. For this example, we'll be using `web3modal` and `ethers` libraries. 
 
 ```javascript
-    axios.post("/web3_login", {
+    axios.post("/web3_verify", {
     address: await web3.getSigner().getAddress(), 
     signature: await web3.getSigner().signMessage(message), 
 });
@@ -140,14 +140,14 @@ const web3Modal = new Web3Modal({
 });
 
 const onClick = async () => {
-    const message = await axios.get("/web3_signature").then((res) => res.data);
+    const message = await axios.get("/web3_nonce").then((res) => res.data);
     const provider = await web3Modal.connect();
 
     provider.on("accountsChanged", () => web3Modal.clearCachedProvider());
 
     const web3 = new ethers.providers.Web3Provider(provider);
 
-    axios.post("/web3_login", {
+    axios.post("/web3_verify", {
         address: await web3.getSigner().getAddress(),
         signature: await web3.getSigner().signMessage(message),
     });
