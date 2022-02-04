@@ -1,0 +1,8 @@
+.php-cs-fixer.cache
+.phpunit.result.cache
+.DS_Store
+vendor
+.idea
+codecov
+coverage.xml
+composer.lock

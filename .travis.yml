@@ -1,0 +1,10 @@
+language: php
+
+php:
+  - 7.4
+
+script:
+  - vendor/bin/phpunit --coverage-clover
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

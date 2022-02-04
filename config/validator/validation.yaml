@@ -1,0 +1,8 @@
+Karhal\Web3ConnectBundle\Entity\Wallet:
+    properties:
+        address:
+            - NotBlank: ~
+            - Regex: '/0x[a-fA-F0-9]{40}/m'
+        signature:
+            - NotBlank: ~
+            - Regex: '/^0x([A-Fa-f0-9]{130})$/'

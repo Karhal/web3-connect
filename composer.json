@@ -1,0 +1,35 @@
+{
+    "name": "karhal/web3-connect",
+    "description": "Allows login on symfony application via ethereum wallet",
+    "type": "symfony-bundle",
+    "require": {
+        "php": ">=7.4",
+        "symfony/framework-bundle": "^5.3|^6.0",
+        "illuminate/support": "^8.80",
+        "kornrunner/keccak": "^1.1",
+        "simplito/elliptic-php": "^1.0",
+        "symfony/validator": "^5.3|^6.0",
+        "symfony/security-bundle": "^5.3|^6.0",
+        "symfony/dependency-injection": "^5.3|^6.0",
+        "ext-json": "*",
+        "doctrine/doctrine-bundle": "^2.5",
+        "firebase/php-jwt": "^6.0.0",
+        "symfony/event-dispatcher": "^5.3|^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Karhal\\Web3ConnectBundle\\": "src/",
+            "Karhal\\Web3ConnectBundle\\Tests\\": "tests/"
+        }
+    },  
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Karhal"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "symfony/test-pack": "^1.0"
+    }
+}
