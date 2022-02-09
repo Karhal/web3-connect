@@ -54,7 +54,7 @@ class Web3ConnectController
     {
         $message = $this->walletHandler->createMessage($request->get('message'));
         $rawMessage = $this->walletHandler->prepareMessage($message);
-        dump($rawMessage);die;
+
         if (!$this->walletHandler->checkSignature($rawMessage, $request->get('signature'), $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
         }
