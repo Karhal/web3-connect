@@ -2,7 +2,6 @@
 
 namespace Karhal\Web3ConnectBundle\Controller;
 
-use Illuminate\Support\Str;
 use Doctrine\Persistence\ManagerRegistry;
 use Karhal\Web3ConnectBundle\Event\DataInitializedEvent;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
@@ -40,9 +39,10 @@ class Web3ConnectController
      */
     public function nonce(Request $request): JsonResponse
     {
-        $request->getSession()->set('nonce', $nonce = Str::random());
+        $nonce = $this->walletHandler->generateNonce();
+        $request->getSession()->set('nonce', $nonce);
 
-        return new JsonResponse($this->walletHandler->generateNonce($nonce));
+        return new JsonResponse($nonce);
     }
 
     /**
@@ -52,13 +52,14 @@ class Web3ConnectController
      */
     public function verify(Request $request): JsonResponse
     {
-        $wallet = $this->walletHandler->createWallet($request->get('address'), $request->get('signature'));
-
-        if (!$this->walletHandler->checkSignature($request->getSession()->get('nonce'), $wallet->getSignature(), $wallet->getAddress())) {
+        $message = $this->walletHandler->createMessage($request->get('message'));
+        $rawMessage = $this->walletHandler->prepareMessage($message);
+        dump($rawMessage);die;
+        if (!$this->walletHandler->checkSignature($rawMessage, $request->get('signature'), $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
         }
 
-        if (!$user = $this->registry->getRepository($this->configuration['user_class'])->findOneBy(['walletAddress' => $wallet->getAddress()])) {
+        if (!$user = $this->registry->getRepository($this->configuration['user_class'])->findOneBy(['walletAddress' => $message->getAddress()])) {
             throw new UserNotFoundException('Unknown user.');
         }
 
@@ -68,7 +69,7 @@ class Web3ConnectController
         $jwt = $this->JWThandler->createJWT(
             [
             'user' => \serialize($user),
-            'wallet' => $wallet->getAddress(),
+            'wallet' => $message->getAddress(),
             ]
         );
 

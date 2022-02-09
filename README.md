@@ -218,6 +218,7 @@ Response:
 - [Ethereum-PHP](https://github.com/digitaldonkey/ethereum-php)
 - https://medium.com/fabric-ventures/what-is-web-3-0-why-it-matters-934eb07f3d2b
 - https://medium.com/mycrypto/the-magic-of-digital-signatures-on-ethereum-98fe184dc9c7
+- https://eips.ethereum.org/EIPS/eip-4361#message-field-descriptions
 
 ### What's an Ethereum wallet?
 
