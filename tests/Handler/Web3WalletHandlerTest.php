@@ -3,59 +3,93 @@
 namespace Karhal\Web3ConnectBundle\Tests\Handler;
 
 use Elliptic\Curve\ShortCurve\Point;
-use Illuminate\Support\Str;
+use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
-use Karhal\Web3ConnectBundle\Model\Wallet;
+use Karhal\Web3ConnectBundle\Model\Message;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Validator\Exception\ValidationFailedException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Validation;
-
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 class Web3WalletHandlerTest extends TestCase
 {
-    const ADDRESS = '0xedaab2a15961a7b6581f4f8c60b32f9bd8802f8c';
-    const MESSAGE = 'You must be the change you want to see in the world';
-    const SIGNATURE = '0x9b1d8d7fb288ffa72e3379910ec33a6a146c8bb5b57d5bab60dfd6fdc6aba65918658227d9f151404607873919310150a87796dc4914f5fb1319375f8f1a0d111c';
-    const CONF = [
-        'sign_message' => self::MESSAGE
-    ];
+    const NONCE = 'N4EkiSkl';
+    const ADDRESS = '0x42d16fbE856CA5fDCD3C9cFE1672d9183fa01534';
+    const SIG = '0xd0c7fb9d41405d865a401f5dfc96a52e1acdbc897b5ec52b6374c94decaf0f237d91c235cbd62276fb65e38b64aef6d5ce77398d879b9a1650a211c6529259c11b';
+    const EIP4361_MESSAGE = '{
+    "message": "localhost:8080 wants you to sign in with your Ethereum account:\n0x42d16fbE856CA5fDCD3C9cFE1672d9183fa01534\n\nSign in with Ethereum to the app.\n\nURI: http://localhost:8080\nVersion: 1\nChain ID: 1\nNonce: N4EkiSkl\nIssued At: 2022-02-10T11:07:24.835Z",
+    "signature": "'.self::SIG.'"
+}';
 
     public function testGenerateNonce()
     {
-        $string = Str::random();
         $handler = $this->createHandler();
-        $nonce = $handler->generateNonce($string);
-        $nonce2 = $handler->generateNonce($string);
+        $nonce = $handler->generateNonce();
+        $nonce2 = $handler->generateNonce();
 
         $this->assertIsString($nonce);
-        $this->assertEquals($nonce2, $nonce);
+        $this->assertNotEquals($nonce2, $nonce);
     }
 
     public function testRecoverPublicKeyFromSignature()
     {
-        $recoveredAddress = $this->createHandler()->recoverPublicKeyFromSignature('', self::SIGNATURE);
+        $handler = $this->createHandler();
+        $data = \json_decode(self::EIP4361_MESSAGE, true);
+        $message = $handler->createMessageFromString($data['message']);
+        $recoveredAddress = $this->createHandler()->recoverPublicKeyFromSignature($handler->prepareMessage($message), $data['signature']);
         $this->assertInstanceOf(Point::class, $recoveredAddress);
     }
 
     public function testAddressesMatch()
     {
-        $this->assertTrue($this->createHandler()->checkSignature('', self::SIGNATURE, self::ADDRESS));
+        $handler = $this->createHandler();
+        $data = \json_decode(self::EIP4361_MESSAGE, true);
+        $message = $handler->createMessageFromString($data['message']);
+        $this->assertTrue($this->createHandler()->checkSignature($handler->prepareMessage($message), $data['signature'], $message->getAddress()));
     }
 
-    public function testCreateWallet()
+    public function testCreateMessage()
     {
-        $wallet = $this->createHandler()
-            ->createWallet('0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', '0xFFFSignature');
-        $this->assertInstanceOf(Wallet::class, $wallet);
+        $handler = $this->createHandler();
+        $data = \json_decode(self::EIP4361_MESSAGE, true);
+        $message = $handler->createMessageFromString($data['message']);
+        $this->assertInstanceOf(Message::class, $message);
+    }
+
+    public function testGetRecidFromSignature()
+    {
+        $this->expectException(SignatureFailException::class);
+        $handler = $this->createHandler();
+        $handler->getRecidFromSignature(self::ADDRESS);
+        $this->assertIsInt($handler->getRecidFromSignature(self::SIG));
+    }
+
+    public function testPrepareMessage()
+    {
+        $handler = $this->createHandler();
+        $data = \json_decode(self::EIP4361_MESSAGE, true);
+        $message = $handler->createMessageFromString($data['message']);
+        $plainTextMessage = $handler->prepareMessage($message);
+
+        $this->assertIsString($plainTextMessage);
+    }
+
+    public function testExtractMessage()
+    {
+        $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
+        $handler = $this->createHandler();
+        $message = $handler->extractMessage($request);
+        $this->assertInstanceOf(Message::class, $message);
     }
 
     private function createHandler(): Web3WalletHandler
     {
+        $session = new Session(new MockArraySessionStorage());
+        $session->set('nonce', self::NONCE);
         $validator = Validation::createValidatorBuilder()
             ->getValidator();
-        $handler = new Web3WalletHandler($validator);
-        $handler->setConfiguration(self::CONF);
 
-        return $handler;
+        return new Web3WalletHandler($session, $validator);
     }
 }

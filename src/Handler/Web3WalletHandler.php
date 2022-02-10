@@ -6,8 +6,10 @@ use Elliptic\EC;
 use kornrunner\Keccak;
 use Illuminate\Support\Str;
 use Elliptic\Curve\ShortCurve\Point;
-use Karhal\Web3ConnectBundle\Model\Wallet;
+use Karhal\Web3ConnectBundle\Model\Message;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -15,44 +17,27 @@ class Web3WalletHandler
 {
     private array $_configuration;
     private ValidatorInterface $validator;
+    private SessionInterface $session;
 
-    /**
-     * @param ValidatorInterface $validator
-     */
-    public function __construct(ValidatorInterface $validator)
+    public function __construct(SessionInterface $session, ValidatorInterface $validator)
     {
+        $this->session = $session;
         $this->validator = $validator;
     }
 
-    /**
-     * @param array $configuration
-     *
-     * @return void
-     */
     public function setConfiguration(array $configuration): void
     {
         $this->_configuration = $configuration;
     }
 
-    /**
-     * @param  string $random
-     * @return string
-     */
-    public function generateNonce(string $random = ''): string
+    public function generateNonce(): string
     {
-        return "{$this->_configuration['sign_message']}$random";
+        return Str::random(8);
     }
 
-    /**
-     * @param  string $nonce
-     * @param  string $signature
-     * @param  string $address
-     * @return bool
-     * @throws \Exception
-     */
-    public function checkSignature(string $nonce, string $signature, string $address): bool
+    public function checkSignature(string $message, string $signature, string $address): bool
     {
-        $pubkey = $this->recoverPublicKeyFromSignature($nonce, $signature);
+        $pubkey = $this->recoverPublicKeyFromSignature($message, $signature);
 
         return hash_equals(
             (string) Str::of($address)->after('0x')->lower(),
@@ -60,15 +45,8 @@ class Web3WalletHandler
         );
     }
 
-    /**
-     * @param  string $nonce
-     * @param  string $signature
-     * @return Point
-     * @throws SignatureFailException
-     */
-    public function recoverPublicKeyFromSignature(string $nonce, string $signature): Point
+    public function recoverPublicKeyFromSignature(string $message, string $signature): Point
     {
-        $message = $this->generateNonce($nonce);
         $hash = $this->hashMessage($message);
         $sign   = ['r' => substr($signature, 2, 64), 's' => substr($signature, 66, 64)];
         $recid  = $this->getRecidFromSignature($signature);
@@ -76,33 +54,67 @@ class Web3WalletHandler
         return (new EC('secp256k1'))->recoverPubKey($hash, $sign, $recid);
     }
 
-    /**
-     * @param string|null $address
-     * @param string|null $signature
-     * @return Wallet
-     */
-    public function createWallet(?string $address, ?string $signature): Wallet
+    public function createMessageFromString(string $content)
     {
-        $wallet = new Wallet();
-        $wallet->setAddress($address);
-        $wallet->setSignature($signature);
-        $errors = $this->validator->validate($wallet);
+        $array = explode("\n", $content);
+
+        $content = [];
+        $content['address'] = $array[1];
+        $content['domain'] = explode(' ', $array[0])[0];
+        $content['issued-at'] = trim(explode('Issued At:', $array[9])[1]);
+        $content['statement'] = $array[3];
+        $content['uri'] = explode(' ',$array[5])[1];
+        $content['version'] = (int)explode(':',$array[6])[1];
+        $content['chain-id'] = (int)explode(':',$array[7])[1];
+        $content['nonce'] = trim(explode(':',$array[8])[1]);
+
+        return $this->createMessageFromArray($content);
+    }
+
+    public function createMessageFromArray(array $content): Message
+    {
+        $message = new Message();
+        $message->setAddress($content['address']);
+        $message->setStatement($content['statement']);
+        $message->setChainId($content['chain-id']);
+        $message->setVersion($content['version']);
+        $message->setDomain($content['domain']);
+        $message->setNonce(str_ireplace('"','', trim($content['nonce'])));
+
+        if(array_key_exists('issued-at', $content)) {
+            $message->setIssuedAt(new \DateTimeImmutable($content['issued-at']));
+        }
+
+        if(array_key_exists('expiration-time', $content)) {
+            $message->setIssuedAt(new \DateTimeImmutable($content['expiration-time']));
+        }
+
+        if(array_key_exists('not-before', $content)) {
+            $message->setNotBefore(new \DateTimeImmutable($content['not-before']));
+        }
+
+        if(array_key_exists('request-id', $content)) {
+            $message->setRequestId($content['request-id']);
+        }
+
+        if(array_key_exists('resources', $content)) {
+            $message->setResources($content['resources']);
+        }
+
+        $message->setUri($content['uri']);
+
+        $errors = $this->validator->validate($message);
 
         if (count($errors) > 0) {
             throw new ValidationFailedException('Invalid input', $errors);
         }
 
-        return $wallet;
+        return $message;
     }
 
-    /**
-     * @param  string $string
-     * @return int
-     * @throws SignatureFailException
-     */
-    private function getRecidFromSignature(string $string): int
+    public function getRecidFromSignature(string $signature): int
     {
-        $recid = ord(hex2bin(substr($string, 130, 2))) - 27;
+        $recid = ord(hex2bin(substr($signature, 130, 2))) - 27;
 
         if ($recid != ($recid & 1)) {
             throw new SignatureFailException('Invalid Signature');
@@ -111,13 +123,73 @@ class Web3WalletHandler
         return $recid;
     }
 
-    /**
-     * @param  string $message
-     * @return string
-     * @throws \Exception
-     */
     private function hashMessage(string $message): string
     {
         return Keccak::hash(sprintf("\x19Ethereum Signed Message:\n%s%s", strlen($message), $message), 256);
+    }
+
+    public function extractMessage(Request $request): Message
+    {
+        $nonce = $this->session->get('nonce');
+        $input = $request->getContent();
+        $content = \json_decode($input, true);
+        if(is_string($content['message'])) {
+            $message = $this->createMessageFromString($content['message']);
+        } else {
+            $message = $this->createMessageFromArray($content['message']);
+        }
+        if($nonce != $message->getNonce()) {
+            //throw new \Exception("Invalid Nonce:");
+        }
+
+        return $message;
+    }
+
+    public function prepareMessage(Message $message): string
+    {
+        //todo https://eips.ethereum.org/EIPS/eip-4361#message-field-descriptions
+        $header = "{$message->getDomain()} wants you to sign in with your Ethereum account:";
+        $uri = "URI: {$message->getUri()}";
+        $prefix = implode("\n", [$header, $message->getAddress()]);
+        $version = "Version: {$message->getVersion()}";
+        $chain = "Chain ID: {$message->getChainId()}";
+        $nonce = "Nonce: {$message->getNonce()}";
+        $suffixArray = [$uri, $version, $chain, $nonce];
+
+        if($message->getIssuedAt()) {
+            $formattedDate = str_ireplace('+00:00', 'Z', $message->getIssuedAt()->format(DATE_RFC3339_EXTENDED));
+            $issuedAt = "Issued At: {$formattedDate}";
+            $suffixArray[] = $issuedAt;
+        }
+
+        if($message->getExpirationTime()) {
+            $expirationTime = "Expiration Time: {$message->getExpirationTime()->format('Y-m-d\TH:i:s\Z')}";
+            $suffixArray[] = $expirationTime;
+        }
+
+        if($message->getNotBefore()) {
+            $notBefore = "Not Before: {$message->getNotBefore()->format('Y-m-d\TH:i:s\Z')}";
+            $suffixArray[] = $notBefore;
+        }
+
+        if($message->getRequestId()) {
+            $requestId = "Request ID: {$message->getRequestId()}";
+            $suffixArray[] = $requestId;
+        }
+
+        if($message->getResources()) {
+            $resources = implode("\n- ", $message->getResources());
+            $suffixArray[] = "Resources:\n- ".$resources;
+        }
+
+        $suffix = implode("\n", $suffixArray);
+
+        if(null !== $message->getStatement()) {
+            $prefix = implode("\n\n", [$prefix, $message->getStatement()]);
+        } else {
+            $prefix .= "\n";
+        }
+
+        return implode("\n\n", [$prefix, $suffix]);
     }
 }
