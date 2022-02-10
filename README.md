@@ -19,7 +19,7 @@ This bundle is here to bring this feature to every Symfony website.
 ### Installation
 
 ```bash
-composer require karhal/web3-connect-bundle
+composer require karhal/web3-connect
 ```
 
 ```php
