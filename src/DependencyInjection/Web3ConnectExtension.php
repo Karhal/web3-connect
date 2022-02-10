@@ -34,8 +34,6 @@ class Web3ConnectExtension extends Extension
             ->setAutowired(true)
             ->addMethodCall('setConfiguration', [$config]);
         ;
-        $container->register(RequestListener::class)
-            ->addTag('kernel.event_listener', ['event' => KernelEvents::CONTROLLER, 'priority' => 100]);
     }
 
     public function getConfiguration(array $config, ContainerBuilder $container)

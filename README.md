@@ -6,8 +6,9 @@
 ## Description
 
 This Symfony bundle let your users authenticate with their ethereum wallet.
-To do this you only need them to sign a message with an address linked with their profile.
+To do this you only need them to sign a message with their wallet.
 
+This bundle uses the eip-4361, it is meant to work with the [spruceid/siwe](https://github.com/spruceid/siwe) library
 ### Why ?
 
 Your wallet lets you connect to any decentralized application using your Ethereum account. It's like a login you can use across many dapps.
@@ -40,7 +41,6 @@ config/packages/web3_connect.yaml
 wallet_connect:
   user_class: App\Entity\User
   jwt_secret: MySecretPhrase
-  sign_message: "Hey ! To log in just sign this with your wallet"
 ```
 config/packages/security.yaml
 
@@ -106,52 +106,106 @@ Now you're good to go
 The bundle provides a signature route to generate the message to sign.
 Once the message signed, send it back with the address which signed it.
 
-## Step 1: Get message to sign
+## Step 1: Get the nonce
 
-For each user log in demand, the bundle generates a nonce from your configured signature message to make it unique to the user in session
-
-```javascript
-const message = await axios.get("/web3_nonce").then((res) => res.data);
-```
-
-## Step 2: User signs the Nonce 
-
-The user now returns the signed message to the login route with his wallet address.
-
-There are multiple ways to connect your front to the user's wallet. For this example, we'll be using `web3modal` and `ethers` libraries. 
+Before each signature, get the nonce from the backend
 
 ```javascript
-    axios.post("/web3_verify", {
-    address: await web3.getSigner().getAddress(), 
-    signature: await web3.getSigner().signMessage(message), 
+    const res = await fetch(`${BACKEND_ADDR}/web3_nonce`, {
+    credentials: 'include',
+    mode: 'cors',
+    headers: {
+        'Accept': 'application/json',
+    },
 });
 ```
 
-Full example
+## Step 2: Generate the message 
 
 ```javascript
-import axios from "axios";
-import { ethers } from "ethers";
-import Web3Modal from "web3modal";
+    const message = await createSiweMessage(
+        await signer.getAddress(),
+        'Sign in with Ethereum to the app.'
+    );
+```
 
-const web3Modal = new Web3Modal({
-    cacheProvider: true,
-    providerOptions: {},
+## Step 3: Send the message with his signature
+
+```javascript
+    const res = await fetch(`${BACKEND_ADDR}/web3_verify`, {
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message, signature }),
+    credentials: 'include',
+    method: "POST",
+    mode: 'cors',
 });
+```
 
-const onClick = async () => {
-    const message = await axios.get("/web3_nonce").then((res) => res.data);
-    const provider = await web3Modal.connect();
+Full example with the [spruceid/siwe-quickstart example](https://github.com/spruceid/siwe-quickstart/tree/main/03_complete_app/frontend) 
 
-    provider.on("accountsChanged", () => web3Modal.clearCachedProvider());
+```javascript
+import { ethers } from 'ethers';
+import { SiweMessage } from 'siwe';
 
-    const web3 = new ethers.providers.Web3Provider(provider);
+const domain = window.location.host;
+const origin = window.location.origin;
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
 
-    axios.post("/web3_verify", {
-        address: await web3.getSigner().getAddress(),
-        signature: await web3.getSigner().signMessage(message),
+const BACKEND_ADDR = "http://127.0.0.1:8000";
+async function createSiweMessage(address, statement) {
+    const res = await fetch(`${BACKEND_ADDR}/web3_nonce`, {
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+            'Accept': 'application/json',
+        },
     });
-};
+    const message = new SiweMessage({
+        domain,
+        address,
+        statement,
+        uri: origin,
+        version: '1',
+        chainId: '1',
+        nonce: (await res.json()).nonce
+    });
+    return message.prepareMessage();
+}
+
+function connectWallet() {
+    provider.send('eth_requestAccounts', [])
+        .catch(() => console.log('user rejected request'));
+}
+
+async function signInWithEthereum() {
+    const message = await createSiweMessage(
+        await signer.getAddress(),
+        'Sign in with Ethereum to the app.'
+    );
+    const signature = await signer.signMessage(message);
+
+    const res = await fetch(`${BACKEND_ADDR}/web3_verify`, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message, signature }),
+        credentials: 'include',
+        method: "POST",
+        mode: 'cors',
+    });
+    document.getElementById('infoUser').innerText = 'Welcome '+  (await res.json()).identifier;
+}
+
+
+const connectWalletBtn = document.getElementById('connectWalletBtn');
+const siweBtn = document.getElementById('siweBtn');
+connectWalletBtn.onclick = connectWallet;
+siweBtn.onclick = signInWithEthereum;
 ```
 
 The bundle will verify the signed message is owned by the address. If true, the owner of the address from your storage will be loaded as a JWT token.
@@ -166,19 +220,20 @@ Response:
 }
 ````
 
-## Step 3: Access authorized routes
+## Step 4: Access authorized routes
 
 You can now make requests to authorized routes by adding the `http_header` to the headers of your requests with the value of the just generated token.
 
 ```javascript
-axios.get('https://example.com/getSomethingPrivate', {
+    const res = await fetch(`${BACKEND_ADDR}/private_url`, {
     headers: {
+        'Accept': 'application/json',
         'X-AUTH-WEB3TOKEN': 'eyJ0eXs[...]'
-    }
-})
+    },
+});
 ```
 
-## Step 4: Customize the bundle Response
+## Step 5: Customize the bundle Response
 
 Just before returning the Response the bundle dispatch a `DataInitializedEvent` event providing a data array you can fill to provide some extra information to your front.
 

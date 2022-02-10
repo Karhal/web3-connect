@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Elliptic\Curve\ShortCurve\Point;
 use Karhal\Web3ConnectBundle\Model\Message;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -53,7 +54,24 @@ class Web3WalletHandler
         return (new EC('secp256k1'))->recoverPubKey($hash, $sign, $recid);
     }
 
-    public function createMessage(array $content): Message
+    public function createMessageFromString(string $content)
+    {
+        $array = explode("\n", $content);
+
+        $content = [];
+        $content['address'] = $array[1];
+        $content['domain'] = explode(' ', $array[0])[0];
+        $content['issued-at'] = trim(explode('Issued At:', $array[9])[1]);
+        $content['statement'] = $array[3];
+        $content['uri'] = explode(' ',$array[5])[1];
+        $content['version'] = (int)explode(':',$array[6])[1];
+        $content['chain-id'] = (int)explode(':',$array[7])[1];
+        $content['nonce'] = trim(explode(':',$array[8])[1]);
+
+        return $this->createMessageFromArray($content);
+    }
+
+    public function createMessageFromArray(array $content): Message
     {
         $message = new Message();
         $message->setAddress($content['address']);
@@ -61,7 +79,7 @@ class Web3WalletHandler
         $message->setChainId($content['chain-id']);
         $message->setVersion($content['version']);
         $message->setDomain($content['domain']);
-        $message->setNonce(trim($content['nonce']));
+        $message->setNonce(str_ireplace('"','', trim($content['nonce'])));
 
         if(array_key_exists('issued-at', $content)) {
             $message->setIssuedAt(new \DateTimeImmutable($content['issued-at']));
@@ -110,15 +128,28 @@ class Web3WalletHandler
         return Keccak::hash(sprintf("\x19Ethereum Signed Message:\n%s%s", strlen($message), $message), 256);
     }
 
-    public function prepareMessage(Message $message): string
+    public function extractMessage(Request $request): Message
     {
-        if($this->session->get('nonce') != $message->getNonce()) {
-            //throw new \Exception("Invalid Nonce");
+        $nonce = $this->session->get('nonce');
+        $input = $request->getContent();
+        $content = \json_decode($input, true);
+        if(is_string($content['message'])) {
+            $message = $this->createMessageFromString($content['message']);
+        } else {
+            $message = $this->createMessageFromArray($content['message']);
+        }
+        if($nonce != $message->getNonce()) {
+            //throw new \Exception("Invalid Nonce:");
         }
 
+        return $message;
+    }
+
+    public function prepareMessage(Message $message): string
+    {
         //todo https://eips.ethereum.org/EIPS/eip-4361#message-field-descriptions
         $header = "{$message->getDomain()} wants you to sign in with your Ethereum account:";
-        $uri = $message->getUri();
+        $uri = "URI: {$message->getUri()}";
         $prefix = implode("\n", [$header, $message->getAddress()]);
         $version = "Version: {$message->getVersion()}";
         $chain = "Chain ID: {$message->getChainId()}";
@@ -126,7 +157,8 @@ class Web3WalletHandler
         $suffixArray = [$uri, $version, $chain, $nonce];
 
         if($message->getIssuedAt()) {
-            $issuedAt = "Issued At: {$message->getIssuedAt()->format('Y-m-d\TH:i:s\Z')}";
+            $formattedDate = str_ireplace('+00:00', 'Z', $message->getIssuedAt()->format(DATE_RFC3339_EXTENDED));
+            $issuedAt = "Issued At: {$formattedDate}";
             $suffixArray[] = $issuedAt;
         }
 

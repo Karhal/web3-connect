@@ -8,8 +8,10 @@ use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\JWTHandler;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 
 class Web3ConnectController
@@ -37,12 +39,14 @@ class Web3ConnectController
      * @param  Request $request
      * @return JsonResponse
      */
-    public function nonce(Request $request): JsonResponse
+    public function nonce(Request $request): Response
     {
         $nonce = $this->walletHandler->generateNonce();
         $request->getSession()->set('nonce', $nonce);
+        $response = new JsonResponse(['nonce' => $nonce]);
+        $response->headers->setCookie(new Cookie('nonce', $nonce));
 
-        return new JsonResponse($nonce);
+        return $response;
     }
 
     /**
@@ -52,10 +56,11 @@ class Web3ConnectController
      */
     public function verify(Request $request): JsonResponse
     {
-        $message = $this->walletHandler->createMessage($request->get('message'));
+        $message = $this->walletHandler->extractMessage($request);
         $rawMessage = $this->walletHandler->prepareMessage($message);
-
-        if (!$this->walletHandler->checkSignature($rawMessage, $request->get('signature'), $message->getAddress())) {
+        $signature =  json_decode($request->getContent(), true)['signature'];
+        
+        if (!$this->walletHandler->checkSignature($rawMessage, $signature, $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
         }
 
