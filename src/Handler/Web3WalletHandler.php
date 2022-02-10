@@ -139,7 +139,7 @@ class Web3WalletHandler
             $message = $this->createMessageFromArray($content['message']);
         }
         if($nonce != $message->getNonce()) {
-            //throw new \Exception("Invalid Nonce:");
+            throw new \Exception("Invalid Nonce:");
         }
 
         return $message;
