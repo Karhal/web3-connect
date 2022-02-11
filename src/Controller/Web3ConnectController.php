@@ -43,10 +43,8 @@ class Web3ConnectController
     {
         $nonce = $this->walletHandler->generateNonce();
         $request->getSession()->set('nonce', $nonce);
-        $response = new JsonResponse(['nonce' => $nonce]);
-        $response->headers->setCookie(new Cookie('nonce', $nonce));
 
-        return $response;
+        return new JsonResponse(['nonce' => $nonce]);
     }
 
     /**
