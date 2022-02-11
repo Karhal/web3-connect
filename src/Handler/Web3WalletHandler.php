@@ -12,17 +12,21 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class Web3WalletHandler
 {
     private array $_configuration;
     private ValidatorInterface $validator;
     private SessionInterface $session;
+    private CacheInterface $cache;
 
-    public function __construct(SessionInterface $session, ValidatorInterface $validator)
+    public function __construct(SessionInterface $session, ValidatorInterface $validator, CacheInterface $cache)
     {
         $this->session = $session;
         $this->validator = $validator;
+        $this->cache = $cache;
     }
 
     public function setConfiguration(array $configuration): void
@@ -30,9 +34,25 @@ class Web3WalletHandler
         $this->_configuration = $configuration;
     }
 
-    public function generateNonce(): string
+    public function generateNonce(?string $nonce = null): string
     {
-        return Str::random(8);
+        if(null === $nonce) {
+            $nonce = Str::random(8);
+        }
+
+        $this->session->set('nonce', $nonce);
+
+        return $this->cache->get($nonce, function(ItemInterface $item) use ($nonce){
+            $item->expiresAfter(10);
+            return $nonce;
+        });
+    }
+
+    public function getNonce(?string $nonce): string
+    {
+        return $this->cache->get($nonce, function(ItemInterface $item) use ($nonce){
+            return Str::random(8);
+        });
     }
 
     public function checkSignature(string $message, string $signature, string $address): bool
@@ -130,7 +150,6 @@ class Web3WalletHandler
 
     public function extractMessage(Request $request): Message
     {
-        $nonce = $this->session->get('nonce');
         $input = $request->getContent();
         $content = \json_decode($input, true);
         if(is_string($content['message'])) {
@@ -138,9 +157,12 @@ class Web3WalletHandler
         } else {
             $message = $this->createMessageFromArray($content['message']);
         }
-        if($nonce != $message->getNonce()) {
+
+        if(!(($this->session->has('nonce') && $this->session->get('nonce') === $message->getNonce()) ||
+            $this->getNonce($message->getNonce()) === $message->getNonce())) {
             throw new \Exception("Invalid Nonce:");
         }
+        $this->cache->delete($message->getNonce());
 
         return $message;
     }

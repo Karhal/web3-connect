@@ -7,6 +7,7 @@ use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Karhal\Web3ConnectBundle\Model\Message;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Validation;
@@ -112,13 +113,20 @@ class Web3WalletHandlerTest extends TestCase
         $this->assertInstanceOf(Message::class, $message);
     }
 
+    public function testGetNonce()
+    {
+        $handler = $this->createHandler();
+        $this->assertIsString($handler->getNonce(self::NONCE));
+    }
+
     private function createHandler(): Web3WalletHandler
     {
         $session = new Session(new MockArraySessionStorage());
         $session->set('nonce', self::NONCE);
+
         $validator = Validation::createValidatorBuilder()
             ->getValidator();
 
-        return new Web3WalletHandler($session, $validator);
+        return new Web3WalletHandler($session, $validator, new ArrayAdapter());
     }
 }
