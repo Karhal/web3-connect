@@ -6,7 +6,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class Web3User implements UserInterface, Web3UserInterface
 {
-
     public function getRoles()
     {
         // TODO: Implement getRoles() method.

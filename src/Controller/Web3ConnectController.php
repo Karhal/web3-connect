@@ -58,7 +58,7 @@ class Web3ConnectController
         $message = $this->walletHandler->extractMessage($request);
         $rawMessage = $this->walletHandler->prepareMessage($message);
         $signature =  json_decode($request->getContent(), true)['signature'];
-        
+
         if (!$this->walletHandler->checkSignature($rawMessage, $signature, $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
         }

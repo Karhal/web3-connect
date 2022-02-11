@@ -36,13 +36,13 @@ class Web3WalletHandler
 
     public function generateNonce(?string $nonce = null): string
     {
-        if(null === $nonce) {
+        if (null === $nonce) {
             $nonce = Str::random(8);
         }
 
         $this->session->set('nonce', $nonce);
 
-        return $this->cache->get($nonce, function(ItemInterface $item) use ($nonce){
+        return $this->cache->get($nonce, function (ItemInterface $item) use ($nonce) {
             $item->expiresAfter(10);
             return $nonce;
         });
@@ -50,7 +50,7 @@ class Web3WalletHandler
 
     public function getNonce(?string $nonce): string
     {
-        return $this->cache->get($nonce, function(ItemInterface $item) use ($nonce){
+        return $this->cache->get($nonce, function (ItemInterface $item) use ($nonce) {
             return Str::random(8);
         });
     }
@@ -83,10 +83,10 @@ class Web3WalletHandler
         $content['domain'] = explode(' ', $array[0])[0];
         $content['issued-at'] = trim(explode('Issued At:', $array[9])[1]);
         $content['statement'] = $array[3];
-        $content['uri'] = explode(' ',$array[5])[1];
-        $content['version'] = (int)explode(':',$array[6])[1];
-        $content['chain-id'] = (int)explode(':',$array[7])[1];
-        $content['nonce'] = trim(explode(':',$array[8])[1]);
+        $content['uri'] = explode(' ', $array[5])[1];
+        $content['version'] = (int)explode(':', $array[6])[1];
+        $content['chain-id'] = (int)explode(':', $array[7])[1];
+        $content['nonce'] = trim(explode(':', $array[8])[1]);
 
         return $this->createMessageFromArray($content);
     }
@@ -99,25 +99,25 @@ class Web3WalletHandler
         $message->setChainId($content['chain-id']);
         $message->setVersion($content['version']);
         $message->setDomain($content['domain']);
-        $message->setNonce(str_ireplace('"','', trim($content['nonce'])));
+        $message->setNonce(str_ireplace('"', '', trim($content['nonce'])));
 
-        if(array_key_exists('issued-at', $content)) {
+        if (array_key_exists('issued-at', $content)) {
             $message->setIssuedAt(new \DateTimeImmutable($content['issued-at']));
         }
 
-        if(array_key_exists('expiration-time', $content)) {
+        if (array_key_exists('expiration-time', $content)) {
             $message->setIssuedAt(new \DateTimeImmutable($content['expiration-time']));
         }
 
-        if(array_key_exists('not-before', $content)) {
+        if (array_key_exists('not-before', $content)) {
             $message->setNotBefore(new \DateTimeImmutable($content['not-before']));
         }
 
-        if(array_key_exists('request-id', $content)) {
+        if (array_key_exists('request-id', $content)) {
             $message->setRequestId($content['request-id']);
         }
 
-        if(array_key_exists('resources', $content)) {
+        if (array_key_exists('resources', $content)) {
             $message->setResources($content['resources']);
         }
 
@@ -152,13 +152,13 @@ class Web3WalletHandler
     {
         $input = $request->getContent();
         $content = \json_decode($input, true);
-        if(is_string($content['message'])) {
+        if (is_string($content['message'])) {
             $message = $this->createMessageFromString($content['message']);
         } else {
             $message = $this->createMessageFromArray($content['message']);
         }
 
-        if(!(($this->session->has('nonce') && $this->session->get('nonce') === $message->getNonce()) ||
+        if (!(($this->session->has('nonce') && $this->session->get('nonce') === $message->getNonce()) ||
             $this->getNonce($message->getNonce()) === $message->getNonce())) {
             throw new \Exception("Invalid Nonce:");
         }
@@ -178,35 +178,35 @@ class Web3WalletHandler
         $nonce = "Nonce: {$message->getNonce()}";
         $suffixArray = [$uri, $version, $chain, $nonce];
 
-        if($message->getIssuedAt()) {
+        if ($message->getIssuedAt()) {
             $formattedDate = str_ireplace('+00:00', 'Z', $message->getIssuedAt()->format(DATE_RFC3339_EXTENDED));
             $issuedAt = "Issued At: {$formattedDate}";
             $suffixArray[] = $issuedAt;
         }
 
-        if($message->getExpirationTime()) {
+        if ($message->getExpirationTime()) {
             $expirationTime = "Expiration Time: {$message->getExpirationTime()->format('Y-m-d\TH:i:s\Z')}";
             $suffixArray[] = $expirationTime;
         }
 
-        if($message->getNotBefore()) {
+        if ($message->getNotBefore()) {
             $notBefore = "Not Before: {$message->getNotBefore()->format('Y-m-d\TH:i:s\Z')}";
             $suffixArray[] = $notBefore;
         }
 
-        if($message->getRequestId()) {
+        if ($message->getRequestId()) {
             $requestId = "Request ID: {$message->getRequestId()}";
             $suffixArray[] = $requestId;
         }
 
-        if($message->getResources()) {
+        if ($message->getResources()) {
             $resources = implode("\n- ", $message->getResources());
             $suffixArray[] = "Resources:\n- ".$resources;
         }
 
         $suffix = implode("\n", $suffixArray);
 
-        if(null !== $message->getStatement()) {
+        if (null !== $message->getStatement()) {
             $prefix = implode("\n\n", [$prefix, $message->getStatement()]);
         } else {
             $prefix .= "\n";
