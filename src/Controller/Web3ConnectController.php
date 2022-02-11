@@ -8,11 +8,11 @@ use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\JWTHandler;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Contracts\Cache\CacheInterface;
 
 class Web3ConnectController
 {
@@ -21,13 +21,15 @@ class Web3ConnectController
     private array $configuration;
     private EventDispatcherInterface $eventDispatcher;
     private JWTHandler $JWThandler;
+    private CacheInterface $cache;
 
-    public function __construct(ManagerRegistry $registry, Web3WalletHandler $walletHandler, EventDispatcherInterface $eventDispatcher, JWTHandler $JWThandler)
+    public function __construct(ManagerRegistry $registry, Web3WalletHandler $walletHandler, EventDispatcherInterface $eventDispatcher, JWTHandler $JWThandler, CacheInterface $cache)
     {
         $this->registry = $registry;
         $this->walletHandler = $walletHandler;
         $this->eventDispatcher = $eventDispatcher;
         $this->JWThandler = $JWThandler;
+        $this->cache = $cache;
     }
 
     public function setConfiguration(array $configuration)
@@ -42,7 +44,6 @@ class Web3ConnectController
     public function nonce(Request $request): Response
     {
         $nonce = $this->walletHandler->generateNonce();
-        $request->getSession()->set('nonce', $nonce);
 
         return new JsonResponse(['nonce' => $nonce]);
     }
@@ -57,7 +58,7 @@ class Web3ConnectController
         $message = $this->walletHandler->extractMessage($request);
         $rawMessage = $this->walletHandler->prepareMessage($message);
         $signature =  json_decode($request->getContent(), true)['signature'];
-        
+
         if (!$this->walletHandler->checkSignature($rawMessage, $signature, $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
         }

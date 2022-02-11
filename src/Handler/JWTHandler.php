@@ -50,6 +50,6 @@ class JWTHandler
 
     private function getKey()
     {
-        return new Key($this->_configuration['jwt_secret'], $this->_configuration['jwt_algo'] );
+        return new Key($this->_configuration['jwt_secret'], $this->_configuration['jwt_algo']);
     }
 }
