@@ -119,6 +119,24 @@ class Web3WalletHandlerTest extends TestCase
         $this->assertIsString($handler->getNonce(self::NONCE));
     }
 
+    public function testExtractMessageStateless()
+    {
+        $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
+        $handler = $this->createHandlerStateless();
+        $handler->generateNonce(self::NONCE);
+        $message = $handler->extractMessage($request);
+        $this->assertInstanceOf(Message::class, $message);
+    }
+
+    private function createHandlerStateless(): Web3WalletHandler
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $validator = Validation::createValidatorBuilder()
+            ->getValidator();
+
+        return new Web3WalletHandler($session, $validator, new ArrayAdapter());
+    }
+
     private function createHandler(): Web3WalletHandler
     {
         $session = new Session(new MockArraySessionStorage());
