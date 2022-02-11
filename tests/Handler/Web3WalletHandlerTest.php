@@ -15,14 +15,14 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 class Web3WalletHandlerTest extends TestCase
 {
-    const NONCE = 'N4EkiSkl';
-    const ADDRESS = '0x42d16fbE856CA5fDCD3C9cFE1672d9183fa01534';
-    const SIG = '0xd0c7fb9d41405d865a401f5dfc96a52e1acdbc897b5ec52b6374c94decaf0f237d91c235cbd62276fb65e38b64aef6d5ce77398d879b9a1650a211c6529259c11b';
-    const EIP4361_MESSAGE = '{
+    public const NONCE = 'N4EkiSkl';
+    public const ADDRESS = '0x42d16fbE856CA5fDCD3C9cFE1672d9183fa01534';
+    public const SIG = '0xd0c7fb9d41405d865a401f5dfc96a52e1acdbc897b5ec52b6374c94decaf0f237d91c235cbd62276fb65e38b64aef6d5ce77398d879b9a1650a211c6529259c11b';
+    public const EIP4361_MESSAGE = '{
     "message": "localhost:8080 wants you to sign in with your Ethereum account:\n0x42d16fbE856CA5fDCD3C9cFE1672d9183fa01534\n\nSign in with Ethereum to the app.\n\nURI: http://localhost:8080\nVersion: 1\nChain ID: 1\nNonce: N4EkiSkl\nIssued At: 2022-02-10T11:07:24.835Z",
     "signature": "'.self::SIG.'"
 }';
-    const JSON_MESSAGE = '{
+    public const JSON_MESSAGE = '{
     "message": {
         "domain": "www.example.com",
         "uri": "http://127.0.0.1:8000/web3_login",

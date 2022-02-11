@@ -9,12 +9,12 @@ use Firebase\JWT\JWT;
 
 class JWTHandlerTest extends TestCase
 {
-    const KEY = '$ecr3t';
-    const ALGO = 'HS256';
-    const PAYLOAD = [
+    public const KEY = '$ecr3t';
+    public const ALGO = 'HS256';
+    public const PAYLOAD = [
         'foo' => 'bar'
     ];
-    const CONF = [
+    public const CONF = [
         'jwt_secret' => self::KEY,
         'jwt_algo' => self::ALGO,
         'ttl' => 0,

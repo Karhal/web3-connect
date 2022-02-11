@@ -15,12 +15,12 @@ use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken;
 
 class Web3AuthenticatorTest extends TestCase
 {
-    const KEY = '$ecr3t';
-    const ALGO = 'HS256';
-    const HTTP_HEADER = 'X-AUTH-WEB3TOKEN';
-    const ADDRESS = '0xedaab2a15961a7b6581f4f8c60b32f9bd8802f8c';
+    public const KEY = '$ecr3t';
+    public const ALGO = 'HS256';
+    public const HTTP_HEADER = 'X-AUTH-WEB3TOKEN';
+    public const ADDRESS = '0xedaab2a15961a7b6581f4f8c60b32f9bd8802f8c';
 
-    const CONF = [
+    public const CONF = [
         'jwt_secret' => self::KEY,
         'jwt_algo' => self::ALGO,
         'http_header' => self::HTTP_HEADER,
@@ -53,14 +53,13 @@ class Web3AuthenticatorTest extends TestCase
         $request->headers->set('X-AUTH-WEB3TOKEN', $encoded);
         $authenticator = new Web3Authenticator($jwtHandler);
         $authenticator->setConfiguration(self::CONF);
-        $this->assertInstanceOf(Passport::class,$authenticator->authenticate($request));
+        $this->assertInstanceOf(Passport::class, $authenticator->authenticate($request));
 
         $jwtHandler->setConfiguration(array_replace(self::CONF, ['ttl' => -1]));
         $encoded = $jwtHandler->createJWT($payload);
         $request->headers->set('X-AUTH-WEB3TOKEN', $encoded);
         $this->expectException(AuthenticationExpiredException::class);
         $authenticator->authenticate($request);
-
     }
 
     public function testLoadUser()
