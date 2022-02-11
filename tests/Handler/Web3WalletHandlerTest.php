@@ -3,6 +3,7 @@
 namespace Karhal\Web3ConnectBundle\Tests\Handler;
 
 use Elliptic\Curve\ShortCurve\Point;
+use Karhal\Web3ConnectBundle\Exception\InvalidNonceException;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Karhal\Web3ConnectBundle\Model\Message;
@@ -117,6 +118,33 @@ class Web3WalletHandlerTest extends TestCase
     {
         $handler = $this->createHandler();
         $this->assertIsString($handler->getNonce(self::NONCE));
+    }
+
+    public function testExtractMessageStateless()
+    {
+        $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
+        $handler = $this->createHandlerStateless();
+        $handler->generateNonce(self::NONCE);
+        $message = $handler->extractMessage($request);
+        $this->assertInstanceOf(Message::class, $message);
+    }
+
+    public function testInvalidNonce()
+    {
+        $this->expectException(InvalidNonceException::class);
+        $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
+        $handler = $this->createHandlerStateless();
+        $handler->generateNonce();
+        $handler->extractMessage($request);
+    }
+
+    private function createHandlerStateless(): Web3WalletHandler
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $validator = Validation::createValidatorBuilder()
+            ->getValidator();
+
+        return new Web3WalletHandler($session, $validator, new ArrayAdapter());
     }
 
     private function createHandler(): Web3WalletHandler

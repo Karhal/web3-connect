@@ -44,6 +44,7 @@ class Web3ConnectController
     public function nonce(Request $request): Response
     {
         $nonce = $this->walletHandler->generateNonce();
+        $request->getSession()->set('nonce', $nonce);
 
         return new JsonResponse(['nonce' => $nonce]);
     }

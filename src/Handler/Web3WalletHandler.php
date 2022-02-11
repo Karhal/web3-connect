@@ -3,6 +3,7 @@
 namespace Karhal\Web3ConnectBundle\Handler;
 
 use Elliptic\EC;
+use Karhal\Web3ConnectBundle\Exception\InvalidNonceException;
 use kornrunner\Keccak;
 use Illuminate\Support\Str;
 use Elliptic\Curve\ShortCurve\Point;
@@ -39,8 +40,6 @@ class Web3WalletHandler
         if (null === $nonce) {
             $nonce = Str::random(8);
         }
-
-        $this->session->set('nonce', $nonce);
 
         return $this->cache->get($nonce, function (ItemInterface $item) use ($nonce) {
             $item->expiresAfter(10);
@@ -160,7 +159,7 @@ class Web3WalletHandler
 
         if (!(($this->session->has('nonce') && $this->session->get('nonce') === $message->getNonce()) ||
             $this->getNonce($message->getNonce()) === $message->getNonce())) {
-            throw new \Exception("Invalid Nonce:");
+            throw new InvalidNonceException("Invalid Nonce");
         }
         $this->cache->delete($message->getNonce());
 
