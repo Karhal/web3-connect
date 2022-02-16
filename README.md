@@ -5,7 +5,7 @@
 
 ## Description
 
-This Symfony bundle let your users authenticate with their ethereum wallet.
+This Symfony bundle lets your users authenticate with their ethereum wallet.
 To do this you only need them to sign a message with their wallet.
 
 This bundle uses the eip-4361, it is meant to work with the [spruceid/siwe](https://github.com/spruceid/siwe) library
