@@ -174,18 +174,18 @@ final class Message
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeImmutable
      */
-    public function getExpirationTime(): ?\DateTime
+    public function getExpirationTime(): ?\DateTimeImmutable
     {
         return $this->expirationTime;
     }
 
     /**
-     * @param \DateTime|null $expirationTime
+     * @param \DateTimeImmutable|null $expirationTime
      * @return $this
      */
-    public function setExpirationTime(?\DateTime $expirationTime): Message
+    public function setExpirationTime(?\DateTimeImmutable $expirationTime): Message
     {
         $this->expirationTime = $expirationTime;
 
