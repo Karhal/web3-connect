@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class MessageHandlerTest extends TestCase
 {
-    public const EIP4361_MESSAGE = '{"message":"127.0.0.1:8080 wants you to sign in with your Ethereum account:\n0x42fo56bEFooCA5ffFooC9cFE16Bar9o83fa0Baro\n\nSign in with Ethereum to the app.\n\nURI: https://service.org/login?foo=bar\nVersion: 1\nChain ID: 1\nNonce: RSbJtQh7\nIssued At: 2022-02-20T12:04:48.731Z\nExpiration Time: 2022-02-20T12:04:48.731Z\nNot Before: 2022-02-20T12:04:48.731Z\nRequest ID: rffefer\nResources:\n- ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/\n- https://example.com/my-web2-claim.json","signature":"0x86dafd4fb0f282a0f6a067d49e3a70511e9b6513218ca082851f39b34781da3c37bfcdfd15161297a7f77ce9a1c66969fab0505ea6b1e60322873ca3ee8d985a1c"}';
+    public const EIP4361_MESSAGE = '{"message":"127.0.0.1:8080 wants you to sign in with your Ethereum account:\n0x42fo56bEFooCA5ffFooC9cFE16Bar9o83fa0Baro\n\nSign in with Ethereum to the app.\n\nURI: https://service.org/login?foo=bar\nVersion: 1\nChain ID: 1\nNonce: RSbJtQh7\nIssued At: 2022-02-20T12:04:48.731Z\nExpiration Time: 2022-02-20T12:04:48.731Z\nNot Before: 2022-02-20T12:04:48.731Z\nRequest ID: rffefer\nResources:\n- ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/\n- https://example.com/my-web2-claim.json","signature":"..."}';
     public function testParseMessage()
     {
         $input = \json_decode(self::EIP4361_MESSAGE, true);
