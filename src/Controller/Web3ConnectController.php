@@ -6,6 +6,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Karhal\Web3ConnectBundle\Event\DataInitializedEvent;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Karhal\Web3ConnectBundle\Handler\JWTHandler;
+use Karhal\Web3ConnectBundle\Handler\MessageHandler;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -56,9 +57,13 @@ class Web3ConnectController
      */
     public function verify(Request $request): JsonResponse
     {
-        $message = $this->walletHandler->extractMessage($request);
+        $input = $request->getContent();
+        $content = \json_decode($input, true);
+
+        $message = MessageHandler::parseMessage($content['message']);
+        $signature =  json_decode($input, true)['signature'];
+
         $rawMessage = $this->walletHandler->prepareMessage($message);
-        $signature =  json_decode($request->getContent(), true)['signature'];
 
         if (!$this->walletHandler->checkSignature($rawMessage, $signature, $message->getAddress())) {
             throw new SignatureFailException('Signature verification failed');
