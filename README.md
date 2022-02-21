@@ -1,7 +1,7 @@
 [![Depfu](https://badges.depfu.com/badges/39be77dd94720ddf864ac11ef638d293/overview.svg)](https://badges.depfu.com/github/Karhal/web3-connect?project_id=34082)
 [![codecov](https://codecov.io/gh/Karhal/web3-connect/branch/main/graph/badge.svg?token=4UL8g1hRfe)](https://codecov.io/gh/Karhal/web3-connect)
 
-# Wallet Connect Bundle
+# Web3 Wallet Connect Bundle
 
 ## Description
 
