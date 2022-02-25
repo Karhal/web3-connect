@@ -73,7 +73,7 @@ class Web3WalletHandler
         return (new EC('secp256k1'))->recoverPubKey($hash, $sign, $recid);
     }
 
-    public function createMessageFromString(string $content) : Message
+    public function createMessageFromString(string $content): Message
     {
         $array = explode("\n", $content);
 
