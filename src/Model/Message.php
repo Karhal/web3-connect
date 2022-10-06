@@ -21,18 +21,11 @@ final class Message
     protected ?string $requestId = null;
     protected ?array $resources = null;
 
-    /**
-     * @return string
-     */
     public function getAddress(): ?string
     {
         return $this->address;
     }
 
-    /**
-     * @param  null|string $address
-     * @return Message
-     */
     public function setAddress(?string $address): Message
     {
         $this->address = $address;
@@ -40,18 +33,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return null|string
-     */
     public function getStatement(): ?string
     {
         return $this->statement;
     }
 
-    /**
-     * @param string|null $statement
-     * @return $this
-     */
     public function setStatement(?string $statement): Message
     {
         $this->statement = $statement;
@@ -59,18 +45,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getDomain(): string
     {
         return $this->domain;
     }
 
-    /**
-     * @param string $domain
-     * @return Message
-     */
     public function setDomain(string $domain): Message
     {
         $this->domain = $domain;
@@ -78,18 +57,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getUri(): string
     {
         return $this->uri;
     }
 
-    /**
-     * @param string $uri
-     * @return Message
-     */
     public function setUri(string $uri): Message
     {
         $this->uri = $uri;
@@ -97,18 +69,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getVersion(): int
     {
         return $this->version;
     }
 
-    /**
-     * @param int $version
-     * @return Message
-     */
     public function setVersion(int $version): Message
     {
         $this->version = $version;
@@ -116,18 +81,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getChainId(): int
     {
         return $this->chainId;
     }
 
-    /**
-     * @param int $chainId
-     * @return Message
-     */
     public function setChainId(int $chainId): Message
     {
         $this->chainId = $chainId;
@@ -135,18 +93,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getNonce(): string
     {
         return $this->nonce;
     }
 
-    /**
-     * @param string $nonce
-     * @return Message
-     */
     public function setNonce(string $nonce): Message
     {
         $this->nonce = $nonce;
@@ -154,18 +105,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return \DateTimeImmutable|null
-     */
     public function getIssuedAt(): ?\DateTimeImmutable
     {
         return $this->issuedAt;
     }
 
-    /**
-     * @param \DateTimeImmutable|null $issuedAt
-     * @return $this
-     */
     public function setIssuedAt(?\DateTimeImmutable $issuedAt): Message
     {
         $this->issuedAt = $issuedAt;
@@ -173,18 +117,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return \DateTimeImmutable
-     */
     public function getExpirationTime(): ?\DateTimeImmutable
     {
         return $this->expirationTime;
     }
 
-    /**
-     * @param \DateTimeImmutable|null $expirationTime
-     * @return $this
-     */
     public function setExpirationTime(?\DateTimeImmutable $expirationTime): Message
     {
         $this->expirationTime = $expirationTime;
@@ -192,18 +129,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return \DateTimeImmutable|null
-     */
     public function getNotBefore(): ?\DateTimeImmutable
     {
         return $this->notBefore;
     }
 
-    /**
-     * @param \DateTimeImmutable|null $notBefore
-     * @return $this
-     */
     public function setNotBefore(?\DateTimeImmutable $notBefore): Message
     {
         $this->notBefore = $notBefore;
@@ -211,18 +141,11 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getRequestId(): ?string
     {
         return $this->requestId;
     }
 
-    /**
-     * @param string|null $requestId
-     * @return $this
-     */
     public function setRequestId(?string $requestId): Message
     {
         $this->requestId = $requestId;
@@ -230,18 +153,12 @@ final class Message
         return $this;
     }
 
-    /**
-     * @return array
-     */
+
     public function getResources(): ?array
     {
         return $this->resources;
     }
 
-    /**
-     * @param array|null $resources
-     * @return $this
-     */
     public function setResources(?array $resources): Message
     {
         $this->resources = $resources;

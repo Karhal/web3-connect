@@ -67,11 +67,6 @@ class Web3Authenticator extends AbstractAuthenticator
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
-    /**
-     * @param $payload
-     * @return UserInterface
-     * @throws \Exception
-     */
     private function loadUser($payload): UserInterface
     {
         if (!isset($payload['user'])) {

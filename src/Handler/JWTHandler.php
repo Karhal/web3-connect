@@ -9,21 +9,11 @@ class JWTHandler
 {
     private array $_configuration;
 
-    /**
-     * @param array $configuration
-     *
-     * @return void
-     */
     public function setConfiguration(array $configuration): void
     {
         $this->_configuration = $configuration;
     }
 
-    /**
-     * @param array $payload
-     *
-     * @return string
-     */
     public function createJWT(array $payload): string
     {
         $time = time();
@@ -35,11 +25,6 @@ class JWTHandler
         );
     }
 
-    /**
-     * @param string $payload
-     *
-     * @return array
-     */
     public function decodeJWT(string $payload): array
     {
         return (array) JWT::decode(

@@ -9,7 +9,6 @@ use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Karhal\Web3ConnectBundle\Security\Web3Authenticator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
-use Symfony\Component\HttpKernel\KernelEvents;
 
 class Web3ConnectExtension extends Extension
 {

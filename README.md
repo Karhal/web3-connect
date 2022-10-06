@@ -79,6 +79,9 @@ use use Karhal\Web3ConnectBundle\Model\Web3UserInterface;
 class User implements Web3UserInterface
 {
     //...
+    
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $walletAddress;
 
     public function getWalletAddress(): string
     {

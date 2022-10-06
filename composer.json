@@ -4,25 +4,25 @@
     "type": "symfony-bundle",
     "require": {
         "php": ">=7.4",
-        "symfony/framework-bundle": "^5.3|^6.0",
         "illuminate/support": "^9.0",
         "kornrunner/keccak": "^1.1",
         "simplito/elliptic-php": "^1.0",
-        "symfony/validator": "^5.3|^6.0",
-        "symfony/security-bundle": "^5.3|^6.0",
-        "symfony/dependency-injection": "^5.3|^6.0",
+        "symfony/validator": "6.1.*",
+        "symfony/security-bundle": "6.1.*",
+        "symfony/dependency-injection": ">=5.4",
         "ext-json": "*",
-        "doctrine/doctrine-bundle": "^2.5",
+        "doctrine/doctrine-bundle": "^2.7",
         "firebase/php-jwt": "^6.0.0",
-        "symfony/event-dispatcher": "^5.3|^6.0",
-        "symfony/cache": ">=6.0"
+        "symfony/event-dispatcher": ">=5.4",
+        "symfony/cache": ">=6.0",
+        "doctrine/orm": "*"
     },
     "autoload": {
         "psr-4": {
             "Karhal\\Web3ConnectBundle\\": "src/",
             "Karhal\\Web3ConnectBundle\\Tests\\": "tests/"
         }
-    },  
+    },
     "license": "MIT",
     "authors": [
         {

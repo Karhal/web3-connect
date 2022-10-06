@@ -38,10 +38,6 @@ class Web3ConnectController
         $this->configuration = $configuration;
     }
 
-    /**
-     * @param  Request $request
-     * @return JsonResponse
-     */
     public function nonce(Request $request): Response
     {
         $nonce = $this->walletHandler->generateNonce();
@@ -50,11 +46,6 @@ class Web3ConnectController
         return new JsonResponse(['nonce' => $nonce]);
     }
 
-    /**
-     * @param  Request $request
-     * @return JsonResponse
-     * @throws \Exception
-     */
     public function verify(Request $request): JsonResponse
     {
         $input = $request->getContent();

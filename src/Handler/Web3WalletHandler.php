@@ -15,6 +15,7 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class Web3WalletHandler
 {
@@ -23,9 +24,9 @@ class Web3WalletHandler
     private SessionInterface $session;
     private CacheInterface $cache;
 
-    public function __construct(SessionInterface $session, ValidatorInterface $validator, CacheInterface $cache)
+    public function __construct(RequestStack $requestStack, ValidatorInterface $validator, CacheInterface $cache)
     {
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
         $this->validator = $validator;
         $this->cache = $cache;
     }
