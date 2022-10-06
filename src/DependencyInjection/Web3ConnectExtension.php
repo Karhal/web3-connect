@@ -3,7 +3,6 @@
 namespace Karhal\Web3ConnectBundle\DependencyInjection;
 
 use Karhal\Web3ConnectBundle\Controller\Web3ConnectController;
-use Karhal\Web3ConnectBundle\EventListener\RequestListener;
 use Karhal\Web3ConnectBundle\Handler\JWTHandler;
 use Karhal\Web3ConnectBundle\Handler\Web3WalletHandler;
 use Karhal\Web3ConnectBundle\Security\Web3Authenticator;
