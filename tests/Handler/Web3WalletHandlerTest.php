@@ -10,6 +10,7 @@ use Karhal\Web3ConnectBundle\Model\Message;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -140,21 +141,32 @@ class Web3WalletHandlerTest extends TestCase
 
     private function createHandlerStateless(): Web3WalletHandler
     {
-        $session = new Session(new MockArraySessionStorage());
+        $requestStack = $this->createRequestSession();
         $validator = Validation::createValidatorBuilder()
             ->getValidator();
 
-        return new Web3WalletHandler($session, $validator, new ArrayAdapter());
+        return new Web3WalletHandler($requestStack, $validator, new ArrayAdapter());
     }
 
     private function createHandler(): Web3WalletHandler
     {
-        $session = new Session(new MockArraySessionStorage());
-        $session->set('nonce', self::NONCE);
+        $requestStack = $this->createRequestSession();
+        $requestStack->getSession()->set('nonce', self::NONCE);
 
         $validator = Validation::createValidatorBuilder()
             ->getValidator();
 
-        return new Web3WalletHandler($session, $validator, new ArrayAdapter());
+        return new Web3WalletHandler($requestStack, $validator, new ArrayAdapter());
+    }
+
+    private function createRequestSession(): RequestStack
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $request = new Request();
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+        $requestStack->getCurrentRequest()->setSession($session);
+
+        return $requestStack;
     }
 }

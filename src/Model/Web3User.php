@@ -6,19 +6,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class Web3User implements UserInterface, Web3UserInterface
 {
-    public function getRoles()
+    public function getRoles(): array
     {
         // TODO: Implement getRoles() method.
-    }
-
-    public function getPassword()
-    {
-        // TODO: Implement getPassword() method.
-    }
-
-    public function getSalt()
-    {
-        // TODO: Implement getSalt() method.
     }
 
     public function eraseCredentials()
@@ -26,15 +16,11 @@ class Web3User implements UserInterface, Web3UserInterface
         // TODO: Implement eraseCredentials() method.
     }
 
-    public function getUsername()
+    public function getUserIdentifier(): string
     {
-        // TODO: Implement getUsername() method.
+        // TODO: Implement getUserIdentifier() method.
     }
 
-    public function __call($name, $arguments)
-    {
-        // TODO: Implement @method string getUserIdentifier()
-    }
 
     public function getWalletAddress(): ?string
     {
