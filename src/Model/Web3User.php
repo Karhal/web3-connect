@@ -11,7 +11,7 @@ class Web3User implements UserInterface, Web3UserInterface
         // TODO: Implement getRoles() method.
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // TODO: Implement eraseCredentials() method.
     }
