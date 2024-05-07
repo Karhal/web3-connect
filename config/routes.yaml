@@ -1,5 +1,5 @@
 web3_verify:
-    path: /web3_verify
+    path: /web3_verify/{address}
     controller: Karhal\Web3ConnectBundle\Controller\Web3ConnectController::verify
 
 web3_nonce:
