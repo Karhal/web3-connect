@@ -32,7 +32,6 @@ class Web3WalletHandler
         $this->_configuration = $configuration;
     }
 
-    //todo: Add address arg then store in cache key:addre, value:nonce
     public function generateNonce(string $address): string
     {
         return $this->cache->get($address, function (ItemInterface $item) {
@@ -42,7 +41,6 @@ class Web3WalletHandler
         });
     }
 
-    //todo: get nonce from cache by querying with the address from signature and check if it exists
     public function getNonce(string $address): string
     {
         return $this->cache->get($address, function (ItemInterface $item) {
