@@ -10,10 +10,7 @@ use Karhal\Web3ConnectBundle\Model\Message;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Validation;
-use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 class Web3WalletHandlerTest extends TestCase
 {
@@ -44,9 +41,9 @@ class Web3WalletHandlerTest extends TestCase
 
     public function testGenerateNonce()
     {
-        $handler = $this->createHandler();
-        $nonce = $handler->generateNonce();
-        $nonce2 = $handler->generateNonce();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
+        $nonce = $handler->generateNonce('0x1234567890123456789012345678901234567890');
+        $nonce2 = $handler->generateNonce('0x123456789012345678901234567890123456789B');
 
         $this->assertIsString($nonce);
         $this->assertNotEquals($nonce2, $nonce);
@@ -54,24 +51,24 @@ class Web3WalletHandlerTest extends TestCase
 
     public function testRecoverPublicKeyFromSignature()
     {
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $data = \json_decode(self::EIP4361_MESSAGE, true);
         $message = $handler->createMessageFromString($data['message']);
-        $recoveredAddress = $this->createHandler()->recoverPublicKeyFromSignature($handler->prepareMessage($message), $data['signature']);
+        $recoveredAddress = $this->createHandler(self::ADDRESS, self::NONCE)->recoverPublicKeyFromSignature($handler->prepareMessage($message), $data['signature']);
         $this->assertInstanceOf(Point::class, $recoveredAddress);
     }
 
     public function testAddressesMatch()
     {
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $data = \json_decode(self::EIP4361_MESSAGE, true);
         $message = $handler->createMessageFromString($data['message']);
-        $this->assertTrue($this->createHandler()->checkSignature($handler->prepareMessage($message), $data['signature'], $message->getAddress()));
+        $this->assertTrue($this->createHandler(self::ADDRESS, self::NONCE)->checkSignature($handler->prepareMessage($message), $data['signature'], $message->getAddress()));
     }
 
     public function testCreateMessageFromString()
     {
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $data = \json_decode(self::EIP4361_MESSAGE, true);
         $message = $handler->createMessageFromString($data['message']);
         $this->assertInstanceOf(Message::class, $message);
@@ -80,14 +77,14 @@ class Web3WalletHandlerTest extends TestCase
     public function testGetRecidFromSignature()
     {
         $this->expectException(SignatureFailException::class);
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $handler->getRecidFromSignature(self::ADDRESS);
         $this->assertIsInt($handler->getRecidFromSignature(self::SIG));
     }
 
     public function testCreateMessageFromArray()
     {
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $data = \json_decode(self::JSON_MESSAGE, true);
         $message = $handler->createMessageFromArray($data['message']);
         $this->assertInstanceOf(Message::class, $message);
@@ -95,7 +92,7 @@ class Web3WalletHandlerTest extends TestCase
 
     public function testPrepareMessage()
     {
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
         $data = \json_decode(self::EIP4361_MESSAGE, true);
         $message = $handler->createMessageFromString($data['message']);
         $plainTextMessage = $handler->prepareMessage($message);
@@ -110,63 +107,39 @@ class Web3WalletHandlerTest extends TestCase
     public function testExtractMessage()
     {
         $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
-        $handler = $this->createHandler();
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
+        
         $message = $handler->extractMessage($request);
         $this->assertInstanceOf(Message::class, $message);
     }
 
     public function testGetNonce()
     {
-        $handler = $this->createHandler();
-        $this->assertIsString($handler->getNonce(self::NONCE));
-    }
-
-    public function testExtractMessageStateless()
-    {
-        $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
-        $handler = $this->createHandlerStateless();
-        $handler->generateNonce(self::NONCE);
-        $message = $handler->extractMessage($request);
-        $this->assertInstanceOf(Message::class, $message);
+        $handler = $this->createHandler(self::ADDRESS, self::NONCE);
+        $this->assertIsString($handler->getNonce(self::ADDRESS));
     }
 
     public function testInvalidNonce()
     {
         $this->expectException(InvalidNonceException::class);
         $request = new Request([], [], [], [], [], [], self::EIP4361_MESSAGE);
-        $handler = $this->createHandlerStateless();
-        $handler->generateNonce();
+        $handler = $this->createHandler(self::ADDRESS, 'invalid_nonce');
+        $handler->generateNonce(self::ADDRESS);
         $handler->extractMessage($request);
     }
 
-    private function createHandlerStateless(): Web3WalletHandler
+    private function createCache(): ArrayAdapter
     {
-        $requestStack = $this->createRequestSession();
-        $validator = Validation::createValidatorBuilder()
-            ->getValidator();
-
-        return new Web3WalletHandler($requestStack, $validator, new ArrayAdapter());
+        return new ArrayAdapter();
     }
 
-    private function createHandler(): Web3WalletHandler
+    private function createHandler(string $address, string $nonce): Web3WalletHandler
     {
-        $requestStack = $this->createRequestSession();
-        $requestStack->getSession()->set('nonce', self::NONCE);
-
         $validator = Validation::createValidatorBuilder()
             ->getValidator();
+        $cache = $this->createCache();
+        $cache->get($address, function()use($nonce) { return $nonce;});
 
-        return new Web3WalletHandler($requestStack, $validator, new ArrayAdapter());
-    }
-
-    private function createRequestSession(): RequestStack
-    {
-        $session = new Session(new MockArraySessionStorage());
-        $request = new Request();
-        $requestStack = new RequestStack();
-        $requestStack->push($request);
-        $requestStack->getCurrentRequest()->setSession($session);
-
-        return $requestStack;
+        return new Web3WalletHandler($validator, $cache);
     }
 }

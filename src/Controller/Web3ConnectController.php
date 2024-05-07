@@ -38,10 +38,11 @@ class Web3ConnectController
         $this->configuration = $configuration;
     }
 
-    public function nonce(Request $request): Response
+    //todo: Add address arg then store in cache key:addr, value:nonce
+
+    public function nonce(Request $request, string $address): Response
     {
-        $nonce = $this->walletHandler->generateNonce();
-        $request->getSession()->set('nonce', $nonce);
+        $nonce = $this->walletHandler->generateNonce($address);
 
         return new JsonResponse(['nonce' => $nonce]);
     }
@@ -50,7 +51,6 @@ class Web3ConnectController
     {
         $input = $request->getContent();
         $content = \json_decode($input, true);
-
         $message = MessageHandler::parseMessage($content['message']);
         $signature =  json_decode($input, true)['signature'];
 
