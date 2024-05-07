@@ -10,23 +10,19 @@ use Elliptic\Curve\ShortCurve\Point;
 use Karhal\Web3ConnectBundle\Model\Message;
 use Karhal\Web3ConnectBundle\Exception\SignatureFailException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 class Web3WalletHandler
 {
     private array $_configuration;
     private ValidatorInterface $validator;
-    private SessionInterface $session;
     private CacheInterface $cache;
 
-    public function __construct(RequestStack $requestStack, ValidatorInterface $validator, CacheInterface $cache)
+    public function __construct(ValidatorInterface $validator, CacheInterface $cache)
     {
-        $this->session = $requestStack->getSession();
         $this->validator = $validator;
         $this->cache = $cache;
     }
@@ -36,21 +32,21 @@ class Web3WalletHandler
         $this->_configuration = $configuration;
     }
 
-    public function generateNonce(?string $nonce = null): string
+    //todo: Add address arg then store in cache key:addre, value:nonce
+    public function generateNonce(string $address): string
     {
-        if (null === $nonce) {
-            $nonce = Str::random(8);
-        }
+        return $this->cache->get($address, function (ItemInterface $item) {
+            $item->expiresAfter(60);
 
-        return $this->cache->get($nonce, function (ItemInterface $item) use ($nonce) {
-            $item->expiresAfter(10);
-            return $nonce;
+            return Str::random(8);
         });
     }
 
-    public function getNonce(?string $nonce): string
+    //todo: get nonce from cache by querying with the address from signature and check if it exists
+    public function getNonce(string $address): string
     {
-        return $this->cache->get($nonce, function (ItemInterface $item) use ($nonce) {
+        return $this->cache->get($address, function (ItemInterface $item) {
+
             return Str::random(8);
         });
     }
@@ -159,11 +155,10 @@ class Web3WalletHandler
             $message = $this->createMessageFromArray($content['message']);
         }
 
-        if (!(($this->session->has('nonce') && $this->session->get('nonce') === $message->getNonce()) ||
-            $this->getNonce($message->getNonce()) === $message->getNonce())) {
+        if ( $this->cache->get($message->getAddress(), function(){ return null;}) !== $message->getNonce()) {
             throw new InvalidNonceException("Invalid Nonce");
         }
-        $this->cache->delete($message->getNonce());
+        $this->cache->delete($message->getAddress());
 
         return $message;
     }
