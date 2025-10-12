@@ -11,7 +11,7 @@
         "symfony/security-bundle": "6.4.*",
         "symfony/dependency-injection": ">=5.4",
         "ext-json": "*",
-        "doctrine/doctrine-bundle": "^2.7",
+        "doctrine/doctrine-bundle": "^3.0",
         "firebase/php-jwt": "^6.0.0",
         "symfony/event-dispatcher": ">=5.4",
         "symfony/cache": ">=6.0",
