@@ -12,7 +12,7 @@
         "symfony/dependency-injection": ">=5.4",
         "ext-json": "*",
         "doctrine/doctrine-bundle": "^2.7",
-        "firebase/php-jwt": "^6.0.0",
+        "firebase/php-jwt": "^7.0.0",
         "symfony/event-dispatcher": ">=5.4",
         "symfony/cache": ">=6.0",
         "doctrine/orm": "*"
